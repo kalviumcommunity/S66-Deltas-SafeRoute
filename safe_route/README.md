@@ -14,7 +14,7 @@ Flutter Environment Setup and First App Run
 🛠️ Installation & Configuration Steps
 1️⃣ Installed Flutter SDK
 
-Downloaded Flutter SDK from the official Flutter website.
+Downloaded Flutter SDK from the official Flutter website
 
 Extracted to a dedicated directory:
 
@@ -80,18 +80,8 @@ Successfully launched default Flutter counter application on emulator.
 📸 screenshot here showing all green checks
 ![alt text](image.png)
 
+📸 screenshot here showing default Flutter counter app
 ![alt text](image-1.png)
-
-Example:
-
-[✓] Flutter
-[✓] Android toolchain
-[✓] Chrome
-[✓] Android Studio
-[✓] VS Code
-🔹 App Running on Emulator
-
-📸 Add screenshot here showing default Flutter counter app
 
 🧠 Reflection
 Challenges Faced
