@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/section_title.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -6,10 +7,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Safe Route"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Safe Route"), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -17,10 +15,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             const Text(
               "Discover Safe Routes",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -35,13 +30,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            const Text(
-              "Trending Routes",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            const SectionTitle(text: "Trending Routes"),
 
             const SizedBox(height: 12),
 
