@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class PrimaryButton extends StatelessWidget {
-
   final String title;
   final VoidCallback onPressed;
 
@@ -15,10 +14,17 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 52,
       child: ElevatedButton(
         onPressed: onPressed,
-        child: Text(title),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(title),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_rounded, size: 18),
+          ],
+        ),
       ),
     );
   }
