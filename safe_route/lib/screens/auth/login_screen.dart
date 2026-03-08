@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/primary_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -80,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 30),
 
-              ElevatedButton(onPressed: _login, child: const Text("Login")),
+              PrimaryButton(title: "Login", onPressed: _login),
             ],
           ),
         ),
