@@ -1,131 +1,270 @@
-🚀 Safe Route
-Sprint #2 – Flutter Environment Setup & First App Run
+# Safe Routes - Firestore Schema Design
 
-This module marks the foundational setup for Sprint #2: Building Smart Mobile Experiences with Flutter & Firebase.
+## Firestore Overview
 
-The goal of this task was to configure a complete Flutter development environment, verify installation, and successfully run the first Flutter application on an emulator or physical device.
+Safe Routes helps urban runners and cyclists discover safer roads, well-lit paths, and community-verified routes in busy cities. This document defines the Firestore schema that the team will use before implementing full CRUD logic.
 
-A stable setup ensures smooth integration with Firebase, Google Maps, and advanced Flutter modules in upcoming phases.
+The schema is designed for:
+- scalable reads and writes
+- clear ownership of data per collection
+- minimal nesting and predictable query patterns
 
-📌 Project Title
+## Data Requirements List
 
-Flutter Environment Setup and First App Run
+The app must store:
+- users and profile preferences
+- routes with map path metadata
+- route reviews and ratings
+- safety reports for hazards, lighting, and traffic issues
+- route verifications from trusted community users
+- user notifications
+- user bookmarks (saved routes)
 
-🛠️ Installation & Configuration Steps
-1️⃣ Installed Flutter SDK
+## Firestore Data Model
 
-Downloaded Flutter SDK from the official Flutter website
+### 1) `users`
+Document ID: `userId` (Firebase Auth UID recommended)
 
-Extracted to a dedicated directory:
+Fields:
+- `name`: string
+- `email`: string
+- `photoUrl`: string?
+- `preferences`: map
+- `createdAt`: timestamp
+- `updatedAt`: timestamp
 
-Windows: C:\src\flutter
+Subcollections:
+- `bookmarks`
+  - Document ID: auto ID
+  - `routeId`: string
+  - `savedAt`: timestamp
 
-macOS/Linux: ~/development/flutter
+### 2) `routes`
+Document ID: `routeId` (auto ID)
 
-Added Flutter to system PATH environment variable.
+Fields:
+- `name`: string
+- `description`: string
+- `createdBy`: string (`users/{userId}` reference ID)
+- `city`: string
+- `distanceKm`: number
+- `path`: array<GeoPoint>
+- `avgRating`: number
+- `isVerified`: boolean
+- `createdAt`: timestamp
+- `updatedAt`: timestamp
 
-Verified installation using:
+Subcollections:
+- `reviews`
+  - Document ID: `reviewId` (auto ID)
+  - `userId`: string
+  - `rating`: number
+  - `comment`: string
+  - `createdAt`: timestamp
+- `safetyReports`
+  - Document ID: `reportId` (auto ID)
+  - `userId`: string
+  - `type`: string (`lighting`, `traffic`, `incident`, `other`)
+  - `description`: string
+  - `location`: GeoPoint
+  - `reportedAt`: timestamp
+  - `upvotes`: number
+  - `downvotes`: number
+- `verifications`
+  - Document ID: `verificationId` (auto ID)
+  - `userId`: string
+  - `verifiedAt`: timestamp
 
-flutter doctor
+### 3) `notifications`
+Document ID: `notificationId` (auto ID)
 
-Ensured all required dependencies were resolved.
+Fields:
+- `userId`: string
+- `title`: string
+- `body`: string
+- `isRead`: boolean
+- `createdAt`: timestamp
 
-2️⃣ Set Up Development Environment
-Option A – Android Studio
+## Why Subcollections Were Used
 
-Installed Android Studio.
+Subcollections are used for `reviews`, `safetyReports`, `verifications`, and `bookmarks` because these datasets grow continuously and should be read independently from their parent documents. This avoids large arrays in parent documents and improves scalability and query flexibility.
 
-Installed required components:
+## Naming and Structuring Conventions
 
-Android SDK
+- field names use lowerCamelCase
+- all mutable records include `createdAt` and `updatedAt` where applicable
+- document structures are flat and query-friendly
+- auto IDs are preferred except where stable IDs are meaningful (for example `userId` from Auth)
 
-Android SDK Platform
+## Schema Diagram (Mermaid)
 
-Android Virtual Device (AVD) Manager
+```mermaid
+flowchart TD
+  users[[users]] --> userDoc[(userId)]
+  userDoc --> u1[name: string]
+  userDoc --> u2[email: string]
+  userDoc --> u3[photoUrl: string?]
+  userDoc --> u4[preferences: map]
+  userDoc --> u5[createdAt: timestamp]
+  userDoc --> u6[updatedAt: timestamp]
 
-Installed Flutter and Dart plugins.
+  userDoc --> bookmarks[[bookmarks]]
+  bookmarks --> bookmarkDoc[(bookmarkId)]
+  bookmarkDoc --> b1[routeId: string]
+  bookmarkDoc --> b2[savedAt: timestamp]
 
-Option B – VS Code
+  routes[[routes]] --> routeDoc[(routeId)]
+  routeDoc --> r1[name: string]
+  routeDoc --> r2[description: string]
+  routeDoc --> r3[createdBy: string]
+  routeDoc --> r4[city: string]
+  routeDoc --> r5[distanceKm: number]
+  routeDoc --> r6[path: array<GeoPoint>]
+  routeDoc --> r7[avgRating: number]
+  routeDoc --> r8[isVerified: boolean]
+  routeDoc --> r9[createdAt: timestamp]
+  routeDoc --> r10[updatedAt: timestamp]
 
-Installed Flutter extension.
+  routeDoc --> reviews[[reviews]]
+  reviews --> reviewDoc[(reviewId)]
+  reviewDoc --> rv1[userId: string]
+  reviewDoc --> rv2[rating: number]
+  reviewDoc --> rv3[comment: string]
+  reviewDoc --> rv4[createdAt: timestamp]
 
-Installed Dart extension.
+  routeDoc --> safetyReports[[safetyReports]]
+  safetyReports --> reportDoc[(reportId)]
+  reportDoc --> s1[userId: string]
+  reportDoc --> s2[type: string]
+  reportDoc --> s3[description: string]
+  reportDoc --> s4[location: GeoPoint]
+  reportDoc --> s5[reportedAt: timestamp]
+  reportDoc --> s6[upvotes: number]
+  reportDoc --> s7[downvotes: number]
 
-3️⃣ Emulator Configuration
+  routeDoc --> verifications[[verifications]]
+  verifications --> verDoc[(verificationId)]
+  verDoc --> v1[userId: string]
+  verDoc --> v2[verifiedAt: timestamp]
 
-Opened AVD Manager in Android Studio.
+  notifications[[notifications]] --> notifDoc[(notificationId)]
+  notifDoc --> n1[userId: string]
+  notifDoc --> n2[title: string]
+  notifDoc --> n3[body: string]
+  notifDoc --> n4[isRead: boolean]
+  notifDoc --> n5[createdAt: timestamp]
+```
 
-Created a virtual device (Pixel 6 recommended).
+## Sample Firestore Documents
 
-Selected Android 13+ system image.
+### users/user_123
 
-Launched emulator successfully.
+```json
+{
+  "name": "Ravi Kumar",
+  "email": "ravi@example.com",
+  "photoUrl": "https://example.com/ravi.jpg",
+  "preferences": {
+    "preferredActivity": "running",
+    "preferredTime": "earlyMorning",
+    "avoidHighTraffic": true
+  },
+  "createdAt": "2026-03-09T08:00:00Z",
+  "updatedAt": "2026-03-09T08:00:00Z"
+}
+```
 
-Verified emulator detection using:
+### routes/route_abc
 
-flutter devices
-4️⃣ Created and Ran First Flutter App
+```json
+{
+  "name": "Lakefront Sunrise Loop",
+  "description": "Well-lit 6km loop with low traffic in the early morning.",
+  "createdBy": "user_123",
+  "city": "Bengaluru",
+  "distanceKm": 6.0,
+  "path": [
+    {"lat": 12.9721, "lng": 77.5933},
+    {"lat": 12.9708, "lng": 77.5999}
+  ],
+  "avgRating": 4.6,
+  "isVerified": true,
+  "createdAt": "2026-03-09T08:10:00Z",
+  "updatedAt": "2026-03-09T08:10:00Z"
+}
+```
 
-Created project:
+### routes/route_abc/reviews/review_1
 
-flutter create safe_route
-cd safe_route
-flutter run
+```json
+{
+  "userId": "user_456",
+  "rating": 5,
+  "comment": "Good lighting and safe intersections.",
+  "createdAt": "2026-03-09T09:00:00Z"
+}
+```
 
-Successfully launched default Flutter counter application on emulator.
+### routes/route_abc/safetyReports/report_1
 
-✅ Setup Verification
-🔹 Flutter Doctor Output
+```json
+{
+  "userId": "user_789",
+  "type": "lighting",
+  "description": "One broken light pole near the north gate.",
+  "location": {"lat": 12.9715, "lng": 77.5964},
+  "reportedAt": "2026-03-09T09:15:00Z",
+  "upvotes": 4,
+  "downvotes": 0
+}
+```
 
-📸 screenshot here showing all green checks
-![alt text](image.png)
+### notifications/notif_1
 
-📸 screenshot here showing default Flutter counter app
-![alt text](image-1.png)
+```json
+{
+  "userId": "user_123",
+  "title": "Safety update on saved route",
+  "body": "A lighting issue was reported on Lakefront Sunrise Loop.",
+  "isRead": false,
+  "createdAt": "2026-03-09T09:30:00Z"
+}
+```
 
-🧠 Reflection
-Challenges Faced
+## Data Flow Summary
 
-Resolving Android SDK path configuration.
+- users create and update `routes`
+- community users add `reviews` and `safetyReports` to routes
+- trusted users add route-level `verifications`
+- users store saved routes in `users/{userId}/bookmarks`
+- backend writes user alerts into `notifications`
 
-Accepting Android licenses using flutter doctor --android-licenses.
+## Reflection
 
-Ensuring PATH variables were correctly set.
+### Why this structure
 
-Key Learnings
+This schema keeps each collection focused on one responsibility. High-growth items are isolated into subcollections to support efficient pagination and filtered reads.
 
-A properly configured environment prevents future build and dependency issues.
+### How it supports scalability and clarity
 
-flutter doctor is essential for diagnosing setup problems.
+- parent documents stay lightweight
+- query paths are explicit and predictable
+- team members can reason about ownership and access rules per collection
 
-Emulator configuration is critical for consistent mobile testing.
+### Challenges during design
 
-How This Prepares Us for Sprint #2
+The key tradeoff was deciding what to denormalize while preserving write simplicity. Route-level summary fields (for example `avgRating`) are stored in the parent route document while detailed, growing data remains in subcollections.
 
-This setup enables:
+## Commit and PR Template
 
-Flutter UI development
+Commit message:
+- `feat: added Firestore schema design and database architecture diagram`
 
-Firebase integration
+PR title:
+- `[Sprint-2] Firestore Schema Design - TeamName`
 
-Google Maps SDK usage
-
-Real-time testing on emulator
-
-Efficient debugging using DevTools
-
-With the environment verified, we are ready to begin building core modules including authentication, Firestore integration, and map-based route discovery.
-
-📂 Branch & PR Details
-
-Branch Name:
-
-setup/flutter-environment
-
-Commit Message:
-
-setup: completed Flutter SDK installation and first emulator run
-
-Pull Request Title:
-
-[Sprint-2] Flutter Environment Setup – TeamName
+PR description should include:
+- schema details
+- visual diagram
+- explanation of data flow
+- reflection
